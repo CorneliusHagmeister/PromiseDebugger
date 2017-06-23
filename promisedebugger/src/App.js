@@ -72,11 +72,11 @@ class App extends Component {
       startTime: Date.now()
     })
     var code = this.state.inputCode;
-    code = code.replace(/Promise\s*\(\s*function\s*\(\s*resolve\s*\,\s*reject\)\s*\{/g, "Promise(function(resolve, reject) {\n var id=Math.floor(100000000 + Math.random() * 900000000);\n parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'creation'}),document.location); \n");
-    code = code.replace(/resolve\((.*)\)/g, "parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve'}),document.location); \n resolve($1)\n");
-    code = code.replace(/reject\(\s*\)/g, "\n parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'reject'}),document.location); \n reject()\n");
-    code = code.replace(/\=\s*resolve(\n|\;)/g, " = function(){\n parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve'}),document.location); \n resolve();\n}\n");
-    code = code.replace(/\=\s*reject(\n|\;)/g, " = function(){\n  parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'reject'}),document.location); \n reject();\n}\n");
+    code = code.replace(/Promise\s*\(\s*function\s*\(\s*resolve\s*\,\s*reject\)\s*\{/g, "Promise(function(resolve, reject) { var id=Math.floor(100000000 + Math.random() * 900000000); parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'creation'}),document.location);");
+    code = code.replace(/resolve\((.*)\)/g, "parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve'}),document.location);  resolve($1)");
+    code = code.replace(/reject\(\s*\)/g, " parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'reject'}),document.location);  reject()");
+    code = code.replace(/\=\s*resolve(\n|\;)/g, " = function(){ parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve'}),document.location);  resolve();}");
+    code = code.replace(/\=\s*reject(\n|\;)/g, " = function(){  parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'reject'}),document.location);  reject();}");
 
     let doc;
     var iframe = this.refs.iframe;
