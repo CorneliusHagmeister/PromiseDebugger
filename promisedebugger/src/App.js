@@ -46,6 +46,10 @@ class App extends Component {
         data[String(id)] = {}
       }
       if (action === "resolve" || action === "reject") {
+        if (data[id].entTime) { // already resolved/rejected
+          data[id].actionAfterAction = true;
+          return;
+        }
         data[id].endTime = Date.now();
         if (action === "resolve") {
           data[id].resolved = true;

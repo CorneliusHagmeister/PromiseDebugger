@@ -71,6 +71,14 @@ class DetailView extends Component {
           {this.props.value}
         </div>
       </div>
+      <div className="DetailEl">
+        <div className="DetailTitle">
+          Action after action:
+        </div>
+        <div className="DetailContent">
+          {this.props.actionAfterAction}
+        </div>
+      </div>
       </div>
     );
   }
