@@ -63,6 +63,14 @@ class DetailView extends Component {
           resolved
         </div>
       </div>
+      <div className="DetailEl">
+        <div className="DetailTitle">
+          Value:
+        </div>
+        <div className="DetailContent">
+          {this.props.value}
+        </div>
+      </div>
       </div>
     );
   }

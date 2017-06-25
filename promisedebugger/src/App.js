@@ -31,7 +31,7 @@ class App extends Component {
   }
   handleFrameTasks (e){
     let data=JSON.parse(e.data)
-    this.logPromise(data.id,data.line,data.type)
+    this.logPromise(data.id,data.line,data.type,data.value)
 
   }
   selectPromise(id){
@@ -39,7 +39,7 @@ class App extends Component {
       selectedPromise:id
     })
   }
-  logPromise(id, creator, action) {
+  logPromise(id, creator, action, value) {
     if(this.state.active){
       var data = this.state.promiseData
       if (!data[String(id)]) {
@@ -49,10 +49,12 @@ class App extends Component {
         data[id].endTime = Date.now();
         if (action === "resolve") {
           data[id].resolved = true;
-          data[id].endLocation = creator
+          data[id].endLocation = creator;
+          data[id].value = value;
         } else {
           data[id].resolved = false;
-          data[id].endLocation = creator
+          data[id].endLocation = creator;
+          data[id].value = value;
         }
       } else {
         if (action === "creation") {
@@ -73,7 +75,7 @@ class App extends Component {
     })
     var code = this.state.inputCode;
     code = code.replace(/Promise\s*\(\s*function\s*\(\s*resolve\s*\,\s*reject\)\s*\{/g, "Promise(function(resolve, reject) { var id=Math.floor(100000000 + Math.random() * 900000000); parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'creation'}),document.location);");
-    code = code.replace(/resolve\((.*)\)/g, "parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve'}),document.location);  resolve($1)");
+    code = code.replace(/resolve\((.*)\)/g, "parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve', 'value':$1}),document.location);  resolve($1)");
     code = code.replace(/reject\(\s*\)/g, " parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'reject'}),document.location);  reject()");
     code = code.replace(/\=\s*resolve(\n|\;)/g, " = function(){ parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve'}),document.location);  resolve();}");
     code = code.replace(/\=\s*reject(\n|\;)/g, " = function(){  parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'reject'}),document.location);  reject();}");
@@ -188,6 +190,7 @@ class App extends Component {
             destruction={this.state.promiseData[this.state.selectedPromise]["endTime"]-this.state.startTime}
             endLocation={this.state.promiseData[this.state.selectedPromise]["endLocation"]}
             resolved={this.state.promiseData[this.state.selectedPromise]["resolved"]}
+            value={this.state.promiseData[this.state.selectedPromise]["value"]}
             />
         }
       </div>
