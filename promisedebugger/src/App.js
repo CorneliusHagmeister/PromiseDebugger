@@ -30,6 +30,10 @@ class App extends Component {
     window.removeEventListener("message", this.handleFrameTasks);
   }
   handleFrameTasks (e){
+    if (e.data.source) {
+      return
+    }
+    // console.log(e.data);
     let data=JSON.parse(e.data)
     this.logPromise(data.id,data.line,data.type,data.value)
 
@@ -46,7 +50,7 @@ class App extends Component {
         data[String(id)] = {}
       }
       if (action === "resolve" || action === "reject") {
-        if (data[id].entTime) { // already resolved/rejected
+        if (data[id].endTime) { // already resolved/rejected
           data[id].actionAfterAction = true;
           return;
         }
