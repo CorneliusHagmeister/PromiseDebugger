@@ -9,6 +9,7 @@ class Promisebar extends Component {
     this.refs.promisebar.style
   }
   render() {
+    console.log(this.props.start);
     var barcolor;
     if(!this.props.end){
       barcolor="rgb(216, 193, 60)";
@@ -27,7 +28,7 @@ class Promisebar extends Component {
         <div
           className="promisebar"
           onClick={()=>{ this.props.selectPromise(this.props.Promisekey)}}
-          style={{marginLeft:(this.props.start-this.props.startTime) / this.props.resolution + "px",
+          style={{marginLeft:(this.props.start-this.props.startTime) / this.props.resolution-100 + "px",
             width: Math.floor((this.props.end - this.props.start) / this.props.resolution) + "px",
             background:[barcolor]
           }}

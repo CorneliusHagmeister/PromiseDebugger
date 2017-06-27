@@ -12,7 +12,7 @@ require('codemirror/theme/panda-syntax.css');
 class App extends Component {
   constructor(){
     super()
-    this.state={promiseData:{},selectedPromise:"empty",inputCode:"",startTime:0,active:true}
+    this.state={promiseData:{},selectedPromise:"empty",inputCode:"",startTime:0,active:false}
     this.logPromise=this.logPromise.bind(this)
     this.handleInputChange=this.handleInputChange.bind(this)
     this.handleFrameTasks=this.handleFrameTasks.bind(this)
@@ -21,6 +21,8 @@ class App extends Component {
     this.showTimebar=this.showTimebar.bind(this)
     this.createTimelineText=this.createTimelineText.bind(this)
     this.onScrollHandler=this.onScrollHandler.bind(this)
+    this.loadCode=this.loadCode.bind(this)
+    this.resetCode=this.resetCode.bind(this)
   }
 
   componentDidMount() {
@@ -36,7 +38,6 @@ class App extends Component {
     // console.log(e.data);
     let data=JSON.parse(e.data)
     this.logPromise(data.id,data.line,data.type,data.value)
-
   }
   selectPromise(id){
     this.setState({
@@ -47,7 +48,7 @@ class App extends Component {
     if(this.state.active){
       var data = this.state.promiseData
       if (!data[String(id)]) {
-        data[String(id)] = {}
+        data[String(id)] = {key:id}
       }
       if (action === "resolve" || action === "reject") {
         if (data[id].endTime) { // already resolved/rejected
@@ -74,13 +75,32 @@ class App extends Component {
       this.setState({
         promiseData:data
       })
+    }else{
+      var data = this.state.promiseData
+      if (data[String(id)]) {
+        if (action === "resolve" || action === "reject") {
+          data[id].endTime = Date.now();
+          if (action === "resolve") {
+            data[id].resolved = true;
+            data[id].endLocation = creator
+          } else {
+            data[id].resolved = false;
+            data[id].endLocation = creator
+          }
+        } else {
+          if (action === "creation") {
+            data[id].creationTime = Date.now();
+            data[id].creationLocation = creator;
+            data[id].resolved=false;
+          }
+        }
+        this.setState({
+          promiseData:data
+        })
+      }
     }
   }
-
-  runCode(){
-    this.setState({
-      startTime: Date.now()
-    })
+  loadCode(){
     var code = this.state.inputCode;
     code = code.replace(/Promise\s*\(\s*function\s*\(\s*resolve\s*\,\s*reject\)\s*\{/g, "Promise(function(resolve, reject) { var id=Math.floor(100000000 + Math.random() * 900000000); parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'creation'}),document.location);");
     code = code.replace(/resolve\((.*)\)/g, "parent.postMessage(JSON.stringify({'id':id,'line':new Error().lineNumber,'type':'resolve', 'value':$1}),document.location);  resolve($1)");
@@ -104,7 +124,27 @@ class App extends Component {
     doc.open();
     doc.writeln(scriptTag);
     doc.close();
+  }
+  runCode(){
+    if(!this.state.active){
+      this.resetCode();
+    this.setState({
+      active:!this.state.active,
+      startTime:Date.now()
+    })
+  }else{
+    this.setState({
+      active:!this.state.active
+    })
+  }
     //alert(this.state.promiseData)
+  }
+  resetCode(){
+    this.refs["timelineWrapper"].style.width=100+"px";
+    this.setState( {
+      promiseData:{},
+      selectedPromise:"empty"
+    })
   }
   showTimebar(){
 
@@ -117,7 +157,6 @@ class App extends Component {
   scrollTimeline(){
     this.refs["timeline"].scrollLeft=this.refs["timeline"].scrollWidth-this.refs["timeline"].clientWidth;
     this.refs["timelineWrapper"].style.width=this.refs["timeline"].scrollWidth+"px";
-
   }
   createTimeline(){
     var timeline=[];
@@ -145,14 +184,26 @@ class App extends Component {
     this.refs.timelineWrapper.style.bottom=-this.refs.timeline.scrollTop+"px"
   }
   render() {
+    var array=[];
+    Object.keys(this.state.promiseData).map((key)=> {
+        array.push(this.state.promiseData[key])
+     });
+     array.sort(function(a,b){
+       return a.creationTime<b.creationTime;
+     })
     return (
       <div className="WindowWrapper">
         <div className="menubar">
           <button className="runCode" onClick={()=>{this.runCode()}}>
-            run
+            {!this.state.active&&
+              <div>record</div>
+            }
+            {this.state.active&&
+              <div>pause</div>
+            }
           </button>
-          <button className="stopCode">
-            stop
+          <button className="loadButton" onClick={()=>{this.loadCode()}}>
+            load Code
           </button>
         </div>
         {/*<CodeInput handleInputChange={this.handleInputChange} inputCode={this.state.inputCode}/>*/}
@@ -168,20 +219,20 @@ class App extends Component {
         <div className="debuggingWindow" onMouseOver={()=>{this.showTimebar()}}>
           <div className="TimelineWindow" ref="timeline" onScroll={()=>{this.onScrollHandler()}}>
             {/*  <div className="Timebar" ref="Timebar"/>*/}
-              {Object.keys(this.state.promiseData).map((key)=> {
-                return <Promisebar
-                  selectPromise={this.selectPromise}
-                  selectedPromise={this.state.selectedPromise}
-                  Promisekey={key}
-                  startTime={this.state.startTime}
-                  start={this.state.promiseData[key]["creationTime"]}
-                  end={this.state.promiseData[key]["endTime"]}
-                  resolution={5}
-                  resolved={this.state.promiseData[key]["resolved"]}
-                  scrollTimeline={this.scrollTimeline}
-                  />
-              })
-            }
+            {array.map((key)=> {
+              return <Promisebar
+                selectPromise={this.selectPromise}
+                selectedPromise={this.state.selectedPromise}
+                Promisekey={key["key"]}
+                startTime={this.state.startTime}
+                start={key["creationTime"]}
+                end={key["endTime"]}
+                resolution={5}
+                resolved={key["resolved"]}
+                scrollTimeline={this.scrollTimeline}
+                />
+            })
+          }
           <div className="timelineCompWrapper" ref="timelineWrapper">
             <div className="timelineWrapper">
               {this.createTimeline()}

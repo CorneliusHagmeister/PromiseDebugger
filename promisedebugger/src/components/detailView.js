@@ -60,7 +60,15 @@ class DetailView extends Component {
           Status:
         </div>
         <div className="DetailContent">
+          {this.props.resolved&&
+            <div>
           resolved
+        </div>}
+        {!this.props.resolved&&
+          <div>
+            rejected
+          </div>
+        }
         </div>
       </div>
       <div className="DetailEl">
